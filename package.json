@@ -4,14 +4,20 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
+    "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test-db": "bun run scripts/test-connection.js",
+    "seed-db": "bun run scripts/seed-db.js",
+    "seed-admin": "bun run scripts/seed-admin.js"
   },
   "dependencies": {
+    "dotenv": "^17.2.2",
+    "framer-motion": "^12.23.19",
+    "mongoose": "^8.18.2",
+    "next": "15.5.4",
     "react": "19.1.0",
-    "react-dom": "19.1.0",
-    "next": "15.5.4"
+    "react-dom": "19.1.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
