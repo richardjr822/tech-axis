@@ -23,16 +23,56 @@ const InventoryForm = ({
   ];
   
   useEffect(() => {
-    setForm(formData);
+    // When adding new item, set quantity to 1 and status to In Stock
+    if (formMode === 'add') {
+      setForm({
+        ...formData,
+        quantity: 1,
+        status: 'In Stock'
+      });
+    } else {
+      setForm(formData);
+    }
     setIsDirty(false);
-  }, [formData]);
+  }, [formData, formMode]);
+  
+  // Function to determine status based on quantity
+  const getStatusFromQuantity = (quantity) => {
+    const qty = Number(quantity);
+    if (qty === 0) return 'Out of Stock';
+    if (qty <= 5) return 'Low Stock';
+    return 'In Stock';
+  };
   
   const handleChange = (e) => {
     const { name, value, type } = e.target;
+    let newValue = value;
+    
+    // Handle quantity changes
+    if (name === 'quantity') {
+      newValue = value === '' ? 0 : parseInt(value);
+      // Automatically update status based on quantity
+      const newStatus = getStatusFromQuantity(newValue);
+      setForm(prev => ({
+        ...prev,
+        quantity: newValue,
+        status: newStatus
+      }));
+      setIsDirty(true);
+      return;
+    }
+    
+    // Handle description with 500 character limit
+    if (name === 'description') {
+      if (value.length > 500) {
+        return; // Don't update if exceeds 500 characters
+      }
+      newValue = value;
+    }
     
     setForm(prev => ({
       ...prev,
-      [name]: type === 'number' ? (value === '' ? 0 : parseInt(value)) : value
+      [name]: type === 'number' ? (value === '' ? 0 : parseInt(value)) : newValue
     }));
     
     setIsDirty(true);
@@ -40,13 +80,21 @@ const InventoryForm = ({
   
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(form);
+    // Ensure status is set based on quantity before submitting
+    const finalForm = {
+      ...form,
+      status: getStatusFromQuantity(form.quantity)
+    };
+    onSubmit(finalForm);
   };
 
   const getCategoryIcon = (categoryName) => {
     const category = fixedCategories.find(c => c.name === categoryName);
     return category ? category.icon : '📦';
   };
+  
+  const remainingChars = 500 - (form.description?.length || 0);
+  const isNearLimit = remainingChars <= 50;
   
   return (
     <motion.div 
@@ -170,7 +218,7 @@ const InventoryForm = ({
                     ? 'border-red-500 focus:border-red-400' 
                     : 'border-gray-800 focus:border-orange-500 group-hover:border-gray-700'
                 } rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-4 focus:ring-orange-500/20 transition-all duration-200 backdrop-blur-sm`}
-                placeholder="0"
+                placeholder="1"
                 min="0"
               />
               <AnimatePresence>
@@ -256,7 +304,7 @@ const InventoryForm = ({
             </div>
           </motion.div>
           
-          {/* Status */}
+          {/* Status - Auto-calculated, Read-only */}
           <motion.div 
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -267,30 +315,30 @@ const InventoryForm = ({
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-orange-500" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
-              Status
+              Status <span className="text-xs text-gray-500 ml-2">(Auto-calculated)</span>
             </label>
             <div className="relative group">
-              <select
-                id="status"
-                name="status"
-                value={form.status}
-                onChange={handleChange}
-                className="w-full bg-gray-900/50 border-2 border-gray-800 group-hover:border-gray-700 focus:border-orange-500 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-4 focus:ring-orange-500/20 transition-all duration-200 appearance-none cursor-pointer backdrop-blur-sm"
-              >
-                <option value="In Stock" className="bg-gray-900">✓ In Stock</option>
-                <option value="Low Stock" className="bg-gray-900">⚠ Low Stock</option>
-                <option value="Out of Stock" className="bg-gray-900">✗ Out of Stock</option>
-              </select>
-              <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none">
-                <div className={`w-2 h-2 rounded-full mr-2 animate-pulse ${
-                  form.status === 'In Stock' ? 'bg-green-500' :
-                  form.status === 'Low Stock' ? 'bg-yellow-500' :
-                  'bg-red-500'
-                }`}></div>
-                <svg className="w-4 h-4 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+              <div className="w-full bg-gray-900/50 border-2 border-gray-800 rounded-xl px-4 py-3 text-white flex items-center justify-between cursor-not-allowed opacity-75">
+                <span className="flex items-center">
+                  <div className={`w-2 h-2 rounded-full mr-2 animate-pulse ${
+                    form.status === 'In Stock' ? 'bg-green-500' :
+                    form.status === 'Low Stock' ? 'bg-yellow-500' :
+                    'bg-red-500'
+                  }`}></div>
+                  {form.status === 'In Stock' && '✓ In Stock'}
+                  {form.status === 'Low Stock' && '⚠ Low Stock'}
+                  {form.status === 'Out of Stock' && '✗ Out of Stock'}
+                </span>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
                 </svg>
               </div>
+              <p className="mt-1 text-xs text-gray-500 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+                Status updates automatically based on quantity
+              </p>
             </div>
           </motion.div>
           
@@ -314,6 +362,7 @@ const InventoryForm = ({
                 value={form.description}
                 onChange={handleChange}
                 rows="4"
+                maxLength="500"
                 className={`w-full bg-gray-900/50 border-2 ${
                   errors.description 
                     ? 'border-red-500 focus:border-red-400' 
@@ -321,12 +370,19 @@ const InventoryForm = ({
                 } rounded-xl px-4 py-3 pb-8 text-white placeholder-gray-500 focus:outline-none focus:ring-4 focus:ring-orange-500/20 transition-all duration-200 resize-none backdrop-blur-sm`}
                 placeholder="Provide a detailed description of the item (features, specifications, condition, etc.)..."
               ></textarea>
-              <div className="absolute bottom-3 right-3 text-xs text-gray-500 flex items-center gap-2">
-                <span className={form.description?.length > 200 ? 'text-orange-500' : ''}>
+              <div className={`absolute bottom-3 right-3 text-xs flex items-center gap-2 ${
+                isNearLimit ? 'text-orange-500' : 'text-gray-500'
+              }`}>
+                <span className={isNearLimit ? 'font-semibold' : ''}>
                   {form.description?.length || 0}
                 </span>
                 <span>/</span>
-                <span className="text-gray-600">500 characters</span>
+                <span className="text-gray-600">500</span>
+                {isNearLimit && (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 animate-pulse" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                )}
               </div>
               <AnimatePresence>
                 {errors.description && (
