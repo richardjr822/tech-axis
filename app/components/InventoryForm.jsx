@@ -96,6 +96,19 @@ const InventoryForm = ({
   const remainingChars = 500 - (form.description?.length || 0);
   const isNearLimit = remainingChars <= 50;
   
+  const isFormValid = () => {
+    return (
+      form.name &&
+      form.name.trim().length > 0 &&
+      typeof form.quantity === 'number' &&
+      form.quantity >= 0 &&
+      form.category &&
+      form.category.trim().length > 0 &&
+      form.description &&
+      form.description.trim().length > 0
+    );
+  };
+  
   return (
     <motion.div 
       initial={{ opacity: 0, scale: 0.95 }}
@@ -425,11 +438,11 @@ const InventoryForm = ({
           <button
             type="submit"
             className={`px-6 py-3 rounded-xl transition-all duration-300 flex-1 sm:flex-none flex items-center justify-center font-medium shadow-lg ${
-              !isDirty 
-                ? 'bg-gray-700/50 text-gray-400 cursor-not-allowed border border-gray-700' 
+              !isDirty || !isFormValid()
+                ? 'bg-gray-700/50 text-gray-400 cursor-not-allowed border border-gray-700'
                 : 'bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white shadow-orange-600/30 hover:shadow-orange-600/50 hover:-translate-y-0.5 border border-orange-500'
             }`}
-            disabled={!isDirty}
+            disabled={!isDirty || !isFormValid()}
           >
             {formMode === 'edit' ? (
               <>

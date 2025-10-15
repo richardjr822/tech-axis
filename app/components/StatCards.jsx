@@ -13,10 +13,13 @@ const StatCards = ({ items }) => {
   }, [items]);
 
   const updateStatsFromProps = () => {
-    const totalItems = items.length;
-    const totalQuantity = items.reduce((sum, item) => sum + (item.quantity || 0), 0);
-    const lowStockItems = items.filter(item => item.status === "Low Stock").length;
-    const outOfStockItems = items.filter(item => item.status === "Out of Stock").length;
+    // Exclude archived items from stats
+    const filteredItems = items.filter(item => !item.isArchived);
+
+    const totalItems = filteredItems.length;
+    const totalQuantity = filteredItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
+    const lowStockItems = filteredItems.filter(item => item.status === "Low Stock").length;
+    const outOfStockItems = filteredItems.filter(item => item.status === "Out of Stock").length;
 
     setStats([
       {

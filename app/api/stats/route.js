@@ -23,19 +23,25 @@ export async function GET() {
     
     await connectToDatabase();
     
+    // Only count non-archived items
+    const notArchived = { isArchived: { $ne: true } };
+
     // Get overview statistics
-    const totalItems = await Inventory.countDocuments();
+    const totalItems = await Inventory.countDocuments(notArchived);
     const totalQuantity = await Inventory.aggregate([
+      { $match: notArchived },
       { $group: { _id: null, total: { $sum: "$quantity" } } }
     ]);
     
     // Get status breakdown
     const statusCounts = await Inventory.aggregate([
+      { $match: notArchived },
       { $group: { _id: "$status", count: { $sum: 1 } } }
     ]);
     
     // Get category breakdown
     const categoryCounts = await Inventory.aggregate([
+      { $match: notArchived },
       { $group: { _id: "$category", count: { $sum: 1 } } },
       { $sort: { count: -1 } }
     ]);

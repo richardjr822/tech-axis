@@ -8,7 +8,7 @@ const activityLogSchema = new mongoose.Schema({
   type: {
     type: String,
     required: true,
-    enum: ['item_added', 'item_updated', 'item_deleted']
+    enum: ['item_added', 'item_updated', 'item_deleted', 'item_archived', 'item_restored']
   },
   user: {
     type: String,
@@ -52,8 +52,8 @@ async function logActivity(type, user, itemName, description) {
 export async function GET(request, { params }) {
   try {
     await connectToDatabase();
-    const { id } = params;
-    
+    const { id } = await params;
+
     // Validate ID format
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json(
@@ -61,18 +61,18 @@ export async function GET(request, { params }) {
         { status: 400 }
       );
     }
-    
+
     const item = await Inventory.findById(id);
-    
+
     if (!item) {
       return NextResponse.json(
         { success: false, error: 'Item not found' },
         { status: 404 }
       );
     }
-    
+
     return NextResponse.json({ success: true, item });
-    
+
   } catch (error) {
     console.error('Error fetching inventory item:', error);
     return NextResponse.json(
@@ -85,21 +85,22 @@ export async function GET(request, { params }) {
 // PUT handler - update an inventory item
 export async function PUT(request, { params }) {
   try {
-    console.log('PUT request for item:', params.id);
-    
+    const { id } = await params;
+    console.log('PUT request for item:', id);
+
     if (!process.env.MONGODB_URI) {
       const body = await request.json();
-      return NextResponse.json({ success: true, item: { _id: params.id, ...body } });
+      return NextResponse.json({ success: true, item: { _id: id, ...body } });
     }
 
     await connectToDatabase();
     const body = await request.json();
     const { username, ...updateData } = body;
-    
+
     console.log('Update data:', { username, updateData });
 
     // Get the old item data
-    const oldItem = await Inventory.findById(params.id).lean();
+    const oldItem = await Inventory.findById(id).lean();
     if (!oldItem) {
       return NextResponse.json(
         { success: false, error: 'Item not found' },
@@ -113,7 +114,7 @@ export async function PUT(request, { params }) {
     else if (quantity <= 5) status = 'Low Stock';
 
     const item = await Inventory.findByIdAndUpdate(
-      params.id,
+      id,
       { ...updateData, status },
       { new: true, runValidators: true }
     );
@@ -127,7 +128,7 @@ export async function PUT(request, { params }) {
     if (oldItem.status !== item.status) changes.push(`status from "${oldItem.status}" to "${item.status}"`);
 
     const changeDescription = changes.length > 0 
-      ? `Updated ${changes.join(', ')}` 
+      ? `Updated ${changes.join(', ')}`
       : `Updated item: ${item.name}`;
 
     console.log('Change description:', changeDescription);
@@ -150,11 +151,12 @@ export async function PUT(request, { params }) {
 // DELETE handler - delete an inventory item
 export async function DELETE(request, { params }) {
   try {
-    console.log('DELETE request for item:', params.id);
-    
+    const { id } = await params;
+    console.log('DELETE request for item:', id);
+
     const { searchParams } = new URL(request.url);
     const username = searchParams.get('username');
-    
+
     console.log('Delete username:', username);
 
     if (!process.env.MONGODB_URI) {
@@ -163,7 +165,7 @@ export async function DELETE(request, { params }) {
 
     await connectToDatabase();
 
-    const item = await Inventory.findById(params.id).lean();
+    const item = await Inventory.findById(id).lean();
     if (!item) {
       return NextResponse.json(
         { success: false, error: 'Item not found' },
@@ -173,7 +175,7 @@ export async function DELETE(request, { params }) {
 
     console.log('Deleting item:', item.name);
 
-    await Inventory.findByIdAndDelete(params.id);
+    await Inventory.findByIdAndDelete(id);
 
     // Log the activity
     await logActivity(

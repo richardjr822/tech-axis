@@ -38,6 +38,8 @@ const ActivityLog = ({ currentUser, onClose }) => {
       case 'item_added': return 'text-green-500';
       case 'item_updated': return 'text-yellow-500';
       case 'item_deleted': return 'text-red-500';
+      case 'item_archived': return 'text-orange-500';
+      case 'item_restored': return 'text-blue-500';
       default: return 'text-gray-500';
     }
   };
@@ -47,7 +49,20 @@ const ActivityLog = ({ currentUser, onClose }) => {
       case 'item_added': return 'Added';
       case 'item_updated': return 'Updated';
       case 'item_deleted': return 'Deleted';
+      case 'item_archived': return 'Archived';
+      case 'item_restored': return 'Restored';
       default: return 'Activity';
+    }
+  };
+
+  const getActivityBorderColor = (type) => {
+    switch (type) {
+      case 'item_added': return 'border-green-500/20';
+      case 'item_updated': return 'border-yellow-500/20';
+      case 'item_deleted': return 'border-red-500/20';
+      case 'item_archived': return 'border-orange-500/20';
+      case 'item_restored': return 'border-blue-500/20';
+      default: return 'border-gray-500/20';
     }
   };
 
@@ -92,6 +107,8 @@ const ActivityLog = ({ currentUser, onClose }) => {
     { value: 'all', label: 'All Actions' },
     { value: 'item_added', label: 'Added' },
     { value: 'item_updated', label: 'Updated' },
+    { value: 'item_archived', label: 'Archived' },
+    { value: 'item_restored', label: 'Restored' },
     { value: 'item_deleted', label: 'Deleted' },
   ];
 
@@ -291,11 +308,7 @@ const ActivityLog = ({ currentUser, onClose }) => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getActivityColor(activity.type)} bg-gray-800 border ${
-                        activity.type === 'item_added' ? 'border-green-500/20' :
-                        activity.type === 'item_updated' ? 'border-yellow-500/20' :
-                        'border-red-500/20'
-                      }`}>
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getActivityColor(activity.type)} bg-gray-800 border ${getActivityBorderColor(activity.type)}`}>
                         {getActivityLabel(activity.type)}
                       </span>
                     </td>

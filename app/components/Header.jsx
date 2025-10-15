@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ChangePassword from './ChangePassword';
 
-const Header = ({ currentUser, onLogout, onOpenSettings, onOpenActivityLog, onOpenAccounts }) => {
+const Header = ({ currentUser, onLogout, onOpenSettings, onOpenActivityLog, onOpenAccounts, onViewArchived, onGenerateReport }) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
 
@@ -43,8 +43,22 @@ const Header = ({ currentUser, onLogout, onOpenSettings, onOpenActivityLog, onOp
 
             {/* Navigation and User Menu */}
             <div className="flex items-center gap-3">
+              {/* Generate Report Button - Only for Owner */}
+              {onGenerateReport && currentUser?.role === 'owner' && (
+                <button
+                  onClick={onGenerateReport}
+                  className="hidden md:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white rounded-lg transition-all duration-300 shadow-lg shadow-orange-600/20 hover:shadow-orange-600/40 group"
+                  title="Generate Report"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <span className="text-sm font-medium">Report</span>
+                </button>
+              )}
+
               {/* Activity Log Button - Only for Owner */}
-              {currentUser?.role === 'owner' && (
+              {onOpenActivityLog && currentUser?.role === 'owner' && (
                 <button
                   onClick={onOpenActivityLog}
                   className="hidden md:flex items-center gap-2 px-4 py-2 bg-gray-900 text-white border border-gray-700 rounded-lg hover:bg-gray-800 hover:border-orange-600 transition-all duration-300 group"
@@ -52,13 +66,13 @@ const Header = ({ currentUser, onLogout, onOpenSettings, onOpenActivityLog, onOp
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-300 group-hover:text-orange-500 transition-colors" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
-                </svg>
-                <span className="text-sm font-medium">Activity</span>
-              </button>
+                  </svg>
+                  <span className="text-sm font-medium">Activity</span>
+                </button>
               )}
 
               {/* Accounts Button - Only for Owner */}
-              {currentUser?.role === 'owner' && (
+              {onOpenAccounts && currentUser?.role === 'owner' && (
                 <button
                   onClick={onOpenAccounts}
                   className="hidden md:flex items-center gap-2 px-4 py-2 bg-gray-900 text-white border border-gray-700 rounded-lg hover:bg-gray-800 hover:border-orange-600 transition-all duration-300 group"
@@ -70,6 +84,7 @@ const Header = ({ currentUser, onLogout, onOpenSettings, onOpenActivityLog, onOp
                   <span className="text-sm font-medium">Accounts</span>
                 </button>
               )}
+
               {/* User Menu */}
               <div className="relative">
                 <button
@@ -148,8 +163,24 @@ const Header = ({ currentUser, onLogout, onOpenSettings, onOpenActivityLog, onOp
 
                         {/* Menu Items */}
                         <div className="py-2">
+                          {/* Mobile Generate Report - Only for Owner */}
+                          {onGenerateReport && currentUser?.role === 'owner' && (
+                            <button
+                              onClick={() => {
+                                onGenerateReport();
+                                setShowUserMenu(false);
+                              }}
+                              className="w-full flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800/50 hover:text-orange-500 transition-colors md:hidden"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                              </svg>
+                              <span className="text-sm font-medium">Generate Report</span>
+                            </button>
+                          )}
+
                           {/* Mobile Activity Log - Only for Owner */}
-                          {currentUser?.role === 'owner' && (
+                          {onOpenActivityLog && currentUser?.role === 'owner' && (
                             <button
                               onClick={() => {
                                 onOpenActivityLog();
@@ -159,13 +190,13 @@ const Header = ({ currentUser, onLogout, onOpenSettings, onOpenActivityLog, onOp
                             >
                               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                 <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
-                            </svg>
-                            <span className="text-sm font-medium">Activity Log</span>
-                          </button>
+                              </svg>
+                              <span className="text-sm font-medium">Activity Log</span>
+                            </button>
                           )}
 
                           {/* Mobile Accounts - Only for Owner */}
-                          {currentUser?.role === 'owner' && (
+                          {onOpenAccounts && currentUser?.role === 'owner' && (
                             <button
                               onClick={() => {
                                 onOpenAccounts();
